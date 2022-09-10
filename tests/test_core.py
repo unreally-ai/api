@@ -1,5 +1,3 @@
-from http import client
-from urllib import response
 from fastapi.testclient import TestClient
 from api.main import app
 
