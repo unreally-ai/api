@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 
 # -------- News API ----------
-from api.rapidapi_key import x_rapidapi_key
+import os
 import requests
 
 # ------- Machine Learning ---------
@@ -26,7 +26,7 @@ from nltk.stem import WordNetLemmatizer
 URL = "https://rapidapi.p.rapidapi.com/api/search/NewsSearchAPI"
 HEADERS = {
     "x-rapidapi-host": "contextualwebsearch-websearch-v1.p.rapidapi.com",
-    "x-rapidapi-key": x_rapidapi_key
+    "x-rapidapi-key": os.environ['RAPIDAPI_KEY']
 }
 
 # ----------------------------- PARAMETERS -----------------------------
