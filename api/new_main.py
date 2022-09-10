@@ -2,8 +2,7 @@
 from fastapi import FastAPI
 
 # -------- News API ----------
-from eventregistry import *
-from api.key import my_api_key_event
+from rapidapi_key import x_rapidapi_key
 
 # ------- Machine Learning ---------
 import pandas as pd
@@ -23,16 +22,21 @@ from nltk.stem import WordNetLemmatizer
 # ---------------- LETS GET TO THE CODE ---------------------
 
 # Create News API Client
-er = EventRegistry(apiKey = my_api_key_event, allowUseOfArchive = False)
+URL = "https://rapidapi.p.rapidapi.com/api/search/NewsSearchAPI"
+HEADERS = {
+    "x-rapidapi-host": "contextualwebsearch-websearch-v1.p.rapidapi.com",
+    "x-rapidapi-key": x_rapidapi_key
+}
 
 # ----------------------------- PARAMETERS -----------------------------
 CUSTOM_SW = ["semst","u"] # TODO: add to actual stopwords
 VOCAB_PATH = "/Users/vince/unreally/helpers-main/vocab_script/vocab_headlines.csv"
 BODY_PATH = "/Users/vince/unreally/helpers-main/vocab_script/vocab_bodies.csv"
+VOCAB = "/Users/vince/unreally/helpers-main/vocab_script/kowalsky_vocab.csv"
 USE_LEMMATIZER = True
 
 # TODO: select headlines & body out of dataset 
-vocab_df = pd.read_csv(VOCAB_PATH, header=None)
+vocab_df = pd.read_csv(VOCAB, header=None)
 
 # ----------------------------- BOW VECTORIZER PIPELINE -----------------------------
 # takes [string], returns lowercased & lemmatized [string]
@@ -92,11 +96,11 @@ def create_tfidf(bow):
 def yeet2vec(head, body):
 
     # get our sub-vectores
-    claim_tf = create_tf(create_bow(head, VOCAB_PATH))
-    body_tf = create_tf(create_bow(body, BODY_PATH))
+    claim_tf = create_tf(create_bow(head, VOCAB))
+    body_tf = create_tf(create_bow(body, VOCAB))
     
-    claim_tfidf = create_tfidf(create_bow(head, VOCAB_PATH))
-    body_tfidf = create_tfidf(create_bow(body, BODY_PATH))
+    claim_tfidf = create_tfidf(create_bow(head, VOCAB))
+    body_tfidf = create_tfidf(create_bow(body, VOCAB))
 
     print("  - created sub-vectors ✅")
 
@@ -141,7 +145,7 @@ class NN(nn.Module):
         return out
 
 model = NN(in_dim, hidden_dim, out_dim)
-model.load_state_dict(torch.load('api/kowalsky72-9.pth', map_location=torch.device('cpu')))
+model.load_state_dict(torch.load('api/kowalsky_72_balanced.pth', map_location=torch.device('cpu')))
 model.eval()
 
 def predict(tenk_vec):
@@ -153,7 +157,7 @@ def predict(tenk_vec):
     classes = ['agree', 'disagree', 'discuss', 'unrelated']
     print(pred)
     stance = classes[((pred_idx.data).numpy()[0])]
-    return f"Predicted as: {stance}, with an accuracy of 72.5%."
+    return dict(zip(classes, pred.tolist()[0])), stance
 
 app = FastAPI()
 
@@ -165,17 +169,40 @@ async def route():
 async def use_model(query: str):
     # get bodies matching test_string
     test_string = query
-    data = QueryArticlesIter(keywords=QueryItems.AND(test_string), dataType = ["news", "pr"],keywordsLoc="title,body")# getting news articles which math the test_string
-    try:
-        test_body = "" # initiate test_body (the body we need to test the stance against the test_string)
-        for article in data.execQuery(er, sortBy="rel", maxItems=10):
-            print(article['body'])
-            test_body += article['body']
-            url = article['url']
-        # yeets strings through pipeline, outputs finished 10k vector
+    # get bodies matching test_string
+    page_number = 1
+    page_size = 5
+    auto_correct = True
+    safe_search = True
+    with_thumbnails = False
+    from_published_date = ""
+    to_published_date = ""
+
+    querystring = {"q": test_string,
+                "pageNumber": page_number,
+                "pageSize": page_size,
+                "autoCorrect": auto_correct,
+                "safeSearch": safe_search,
+                "withThumbnails": with_thumbnails,
+                "fromPublishedDate": from_published_date,
+                "toPublishedDate": to_published_date}
+
+    response = requests.get(URL, headers=HEADERS, params=querystring).json()
+    test_body = "" # initiate test_body (the body we need to test the stance against the test_string)
+    sources = []
+    print(len(response['value']))
+    for article in response['value']:
+        body = article['body']
+        sources.append(article['url'])
+        test_body += body
         vector = yeet2vec(test_string, test_body)
         prediction = predict(vector)
-        # send answer tweet
-        return prediction
-    except:
-        return "No articles found"
+    if len(test_body) == 0:
+        return "No articles found :/"
+    # yeets strings through pipeline, outputs finished 10k vector
+    print(len(test_body))
+    print(test_body)
+    vector = yeet2vec(test_string, test_body)
+    values, prediction = predict(vector)
+    # send answer tweet
+    return {'prediction': prediction,'values': values, 'sources': sources}
