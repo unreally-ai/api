@@ -31,9 +31,7 @@ HEADERS = {
 
 # ----------------------------- PARAMETERS -----------------------------
 CUSTOM_SW = ["semst","u"] # TODO: add to actual stopwords
-VOCAB_PATH = "/Users/vince/unreally/helpers-main/vocab_script/vocab_headlines.csv"
-BODY_PATH = "/Users/vince/unreally/helpers-main/vocab_script/vocab_bodies.csv"
-VOCAB = "/Users/vince/unreally/helpers-main/vocab_script/kowalsky_vocab.csv"
+VOCAB = "api/kowalsky_vocab.csv"
 USE_LEMMATIZER = True
 
 # TODO: select headlines & body out of dataset 
