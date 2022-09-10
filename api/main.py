@@ -1,5 +1,6 @@
 # -------- API ----------
 from fastapi import FastAPI
+from mangum import Mangum
 
 # -------- News API ----------
 import os
@@ -205,3 +206,5 @@ async def use_model(query: str):
     values, prediction = predict(vector)
     # send answer tweet
     return {'prediction': prediction,'values': values, 'sources': sources}
+
+handler = Mangum(app=app)
