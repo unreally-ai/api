@@ -2,7 +2,8 @@
 from fastapi import FastAPI
 
 # -------- News API ----------
-from rapidapi_key import x_rapidapi_key
+from api.rapidapi_key import x_rapidapi_key
+import requests
 
 # ------- Machine Learning ---------
 import pandas as pd
