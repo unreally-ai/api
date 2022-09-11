@@ -145,7 +145,7 @@ class NN(nn.Module):
         return out
 
 model = NN(in_dim, hidden_dim, out_dim)
-model.load_state_dict(torch.load('api/kowalsky_72_balanced.pth', map_location=torch.device('cpu')))
+model.load_state_dict(torch.load('kowalsky_72_balanced.pth', map_location=torch.device('cpu')))
 model.eval()
 
 def predict(tenk_vec):
