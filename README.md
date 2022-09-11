@@ -6,12 +6,23 @@ Detecting fake news on social media
 ## Start locally 🚀
 clone this repo
 ```
-git clone https://github.com/unreally-ai/api.git
+git clone https://github.com/unreally-ai/api-twitterbot.git
 ```
 
-Start the fastAPI server
+Install requirements
 ```
-cd src/
+cd api-twitterbot/
 pip install -r requirements.txt
-fastapi go brr
 ```
+
+⚠️Disclaimer: You can only use these if you have the keys.py file in the api-twitterbot file.
+### API
+```
+python3 api.py
+```
+
+### Twitter Bot
+```
+pyhton3 twitter_bot.py
+```
+Now you can mention @calctruth under a tweet, and it will evaluate!
