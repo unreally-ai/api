@@ -32,7 +32,7 @@ HEADERS = {
 
 # ----------------------------- PARAMETERS -----------------------------
 CUSTOM_SW = ["semst","u"] # TODO: add to actual stopwords
-VOCAB = "api/kowalsky_vocab.csv"
+VOCAB = "kowalsky_vocab.csv"
 USE_LEMMATIZER = True
 
 # TODO: select headlines & body out of dataset 
@@ -207,4 +207,12 @@ async def use_model(query: str):
     # send answer tweet
     return {'prediction': prediction,'values': values, 'sources': sources}
 
-handler = Mangum(app=app)
+import nest_asyncio
+
+# Allow for asyncio to work within the Jupyter notebook cell
+nest_asyncio.apply()
+
+import uvicorn
+
+# Run the FastAPI app using uvicorn
+uvicorn.run(app)
