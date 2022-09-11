@@ -1,9 +1,11 @@
 # -------- Twitter API ----------
 import tweepy
-import keys
 
 # -------- News API ----------
 import requests
+
+# -------- important keys so the APIs work ----------
+import keys
 
 # ------- Machine Learning ---------
 import pandas as pd
@@ -84,13 +86,13 @@ def create_bow(in_string, path):
 
 # ----------------------------- TF-IDF PIPELINE -----------------------------
 
+# creates the Term-Frequenze
 def create_tf(bow_vec):
     tfreq_vec = TfidfTransformer(use_idf=False).fit(bow_vec)
     tfreq = tfreq_vec.transform(bow_vec)
 
     return tfreq
 
-# TODO figure out
 
 def create_tfidf(bow):
     tfreq_vec = TfidfTransformer(use_idf=True)
@@ -100,6 +102,17 @@ def create_tfidf(bow):
 
 # -------------- GENEREATE 10001 VECTOR --------------
 def yeet2vec(head, body):
+    '''
+    takes the query text and the according news articles
+    and creates a 10001 vector to base the model on
+
+    params:
+        head = query text (str)
+        body = collection of 5 articles (str)
+
+    return:
+        then tenthousand and one vector (list)
+    '''
 
     # get our sub-vectores
     claim_tf = create_tf(create_bow(head, VOCAB))
@@ -155,6 +168,16 @@ model.load_state_dict(torch.load('kowalsky_72_balanced.pth', map_location=torch.
 model.eval()
 
 def predict(tenk_vec):
+    '''
+    predicts the stance/class of the query
+
+    params:
+        tenk_vec: 10001 vector
+
+    returns:
+        - dictionary of the predictions & the sources of news articles
+        - the stance alone
+    '''
     with torch.no_grad():
         pred = model(tenk_vec.float())
         pred_out, pred_idx = torch.max(pred, 1)
@@ -165,10 +188,25 @@ def predict(tenk_vec):
     stance = classes[((pred_idx.data).numpy()[0])]
     return dict(zip(classes, pred.tolist()[0])), stance
 
-def use_model(query: str):
+def use_pipeline(query: str):
+    '''
+    using the pipeline of functions before, and
+    most importantly fetches the 5 articles as a
+    body.
+
+    params: 
+        query: the claim we want to evaluate
+
+    return: 
+        - values: the prediction to each class
+        - prediction: the highest of values, so the most likely
+        - sources: urls of the articles
+        - is_safe: checks if the first source is safe
+    '''
     # get bodies matching test_string
     test_string = query
-    # get bodies matching test_string
+    
+    # set headers for NewsApi
     page_number = 1
     page_size = 5
     auto_correct = True
@@ -197,7 +235,7 @@ def use_model(query: str):
         vector = yeet2vec(test_string, test_body)
         prediction = predict(vector)
     if len(test_body) == 0:
-        return "No articles found :/"
+        return None
     # yeets strings through pipeline, outputs finished 10k vector
     print(len(test_body))
     print(test_body)
@@ -210,6 +248,7 @@ def use_model(query: str):
 import time
 
 while True:
+    # checks the last tweet which was responded to, to only use new mentions
     last_time = open("time.txt", "r")
     start_from = last_time.read()
     # get @calctruth mentions
@@ -224,7 +263,7 @@ while True:
             reference_tweet = client.get_tweet(user_auth=True,id=reference) # the tweet @calctruth was mentioned under
             test_string = reference_tweet[0]['text'] # the tweet we will evaluate
             print(test_string)
-            values, prediction, sources, is_safe= use_model(test_string)
+            values, prediction, sources, is_safe= use_pipeline(test_string)
             output = f"Predicted as: {prediction}, with an accuracy of 72.5%."
             # send answer tweet
             if is_safe:

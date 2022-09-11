@@ -1,6 +1,5 @@
 # -------- API ----------
 from fastapi import FastAPI
-from mangum import Mangum
 
 # -------- News API ----------
 import keys
@@ -149,6 +148,16 @@ model.load_state_dict(torch.load('kowalsky_72_balanced.pth', map_location=torch.
 model.eval()
 
 def predict(tenk_vec):
+    '''
+    predicts the stance/class of the query
+
+    params:
+        tenk_vec: 10001 vector
+
+    returns:
+        - dictionary of the predictions & the sources of news articles
+        - the stance alone
+    '''
     with torch.no_grad():
         pred = model(tenk_vec.float())
         pred_out, pred_idx = torch.max(pred, 1)
