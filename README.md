@@ -25,6 +25,8 @@ If you now go to [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs) , you 
 
 Here is an example:
 
+![apidemo](https://user-images.githubusercontent.com/64489325/189544085-676a3f4c-1260-40b2-ad47-49644cf123d9.gif)
+
 #### Twitter Bot
 ```
 pyhton3 twitter_bot.py
