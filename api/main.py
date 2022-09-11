@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from mangum import Mangum
 
 # -------- News API ----------
-import os
+from rapidapi_key import x_rapidapi_key
 import requests
 
 # ------- Machine Learning ---------
@@ -27,7 +27,7 @@ from nltk.stem import WordNetLemmatizer
 URL = "https://rapidapi.p.rapidapi.com/api/search/NewsSearchAPI"
 HEADERS = {
     "x-rapidapi-host": "contextualwebsearch-websearch-v1.p.rapidapi.com",
-    "x-rapidapi-key": os.environ['RAPIDAPI_KEY']
+    "x-rapidapi-key": x_rapidapi_key
 }
 
 # ----------------------------- PARAMETERS -----------------------------
