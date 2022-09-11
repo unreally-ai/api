@@ -30,4 +30,5 @@ Here is an example:
 pyhton3 twitter_bot.py
 ```
 Now you can mention @calctruth under a tweet, and it will evaluate!
+
 (Make sure you're not running the bot for too long ;))
