@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ```
 
 ### Executables
-⚠️Disclaimer: You can only use these if you have the keys.py file in the api-twitterbot file.
+⚠️Disclaimer: You can only use these if you have the keys.py file in the api-twitterbot folder.
 #### API
 ```
 python3 api.py
