@@ -1,9 +1,8 @@
-# -------- API ----------
-from fastapi import FastAPI
-from mangum import Mangum
+# -------- Twitter API ----------
+import tweepy
+import keys
 
 # -------- News API ----------
-from rapidapi_key import x_rapidapi_key
 import requests
 
 # ------- Machine Learning ---------
@@ -27,8 +26,15 @@ from nltk.stem import WordNetLemmatizer
 URL = "https://rapidapi.p.rapidapi.com/api/search/NewsSearchAPI"
 HEADERS = {
     "x-rapidapi-host": "contextualwebsearch-websearch-v1.p.rapidapi.com",
-    "x-rapidapi-key": x_rapidapi_key
+    "x-rapidapi-key": keys.rapidapi_key
 }
+
+# Create Twitter API Client
+client = tweepy.Client(
+    consumer_key=keys.API_KEY,
+    consumer_secret=keys.API_KEY_SECRET,
+    access_token=keys.ACCESS_TOKEN,
+    access_token_secret=keys.ACCESS_TOKEN_SECRET)
 
 # ----------------------------- PARAMETERS -----------------------------
 CUSTOM_SW = ["semst","u"] # TODO: add to actual stopwords
@@ -159,14 +165,7 @@ def predict(tenk_vec):
     stance = classes[((pred_idx.data).numpy()[0])]
     return dict(zip(classes, pred.tolist()[0])), stance
 
-app = FastAPI()
-
-@app.get("/")
-async def route():
-    return {"message":"Willkommen zu der Unreally API"}
-
-@app.get("/predict")
-async def use_model(query: str):
+def use_model(query: str):
     # get bodies matching test_string
     test_string = query
     # get bodies matching test_string
@@ -204,15 +203,46 @@ async def use_model(query: str):
     print(test_body)
     vector = yeet2vec(test_string, test_body)
     values, prediction = predict(vector)
+    is_safe = response['value'][0]['isSafe']
     # send answer tweet
-    return {'prediction': prediction,'values': values, 'sources': sources}
+    return values, prediction, sources, is_safe
 
-import nest_asyncio
+import time
 
-# Allow for asyncio to work within the Jupyter notebook cell
-nest_asyncio.apply()
+while True:
+    last_time = open("time.txt", "r")
+    start_from = last_time.read()
+    # get @calctruth mentions
+    tweets = client.get_users_mentions(user_auth=True,id=keys.USER_ID,expansions=["referenced_tweets.id"], since_id=start_from)
+    last_time.close()
 
-import uvicorn
-
-# Run the FastAPI app using uvicorn
-uvicorn.run(app)
+    try:
+        for tweet in tweets.data:
+            # Handle mention and get the tweet we need to evaluate
+            respond_to = tweet.id # the tweet which mentioned @calctruth, and the tweet we need to respond to
+            reference = tweet.referenced_tweets[0]['id'] # the id of the tweet @calctruth was mentioned under
+            reference_tweet = client.get_tweet(user_auth=True,id=reference) # the tweet @calctruth was mentioned under
+            test_string = reference_tweet[0]['text'] # the tweet we will evaluate
+            print(test_string)
+            values, prediction, sources, is_safe= use_model(test_string)
+            output = f"Predicted as: {prediction}, with an accuracy of 72.5%."
+            # send answer tweet
+            if is_safe:
+                response = client.create_tweet(user_auth=True,text=output+" One of the sources: "+sources[0], in_reply_to_tweet_id=respond_to)
+                print("tweet was successful")
+            else:
+                response = client.create_tweet(user_auth=True,text=output, in_reply_to_tweet_id=respond_to)
+            '''
+            except:
+                print("No article found")
+                response = client.create_tweet(user_auth=True,text="Sorry, I couldn't find any articles concerning this topic 😔", in_reply_to_tweet_id=respond_to)
+                print(response)
+            '''
+            last_time = open("time.txt", "w")
+            last_time.write(f"{respond_to}")
+            last_time.close()
+            print(respond_to)
+            print(response)
+    except:
+        print(f"You have not been mentioned since: id={start_from}")
+    time.sleep(10)
