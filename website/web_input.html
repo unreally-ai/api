@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<style>
+    /*COLOUR*/
+    :root {
+        --bg-color: #2F3340;
+        --offset-color: #3E4352;
+        --fg-color: #2DFED5;
+    }
+
+    /*ELEMENTS*/
+    p {
+        color: var(--fg-color);
+        font-family: Arial;
+        padding: 10px;
+    }
+
+    button {
+        height: 30px;
+        width: 80px;
+        border-radius: 10%;
+        background-color: var(--offset-color);
+        color: var(--fg-color);
+        border: none;
+    }
+    button:hover,
+    button:focus {
+        background-color: #50566b;
+    }
+    button:active {
+    transform: scale(0.98);
+}
+
+    textarea {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    /*IDs*/
+    #bgDiv {
+        background-color: var(--bg-color);
+        resize: none;
+    }
+
+    #input {
+        color: var(--fg-color);
+        border-color: var(--bg-color);
+        resize: none;
+        background-color: var(--offset-color)
+
+    }
+
+    #buttonDiv {
+        display: block;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+</style>
+
+<script>
+    function changePercent(result) {
+        var demoResult = {"stance": "agree", "percent": "69", "source":"https://www.youtube.com/watch?v=UZ7a7ufLllo"}
+
+        // change the paragraph via ID
+        var stance = document.getElementById("stancePara");
+        stance.innerHTML = `predicted as: ${demoResult.percent}% ${demoResult.stance}`;
+        
+        var source = document.getElementById("sourcePara");
+        source.innerHTML = `sources: ${demoResult.source}`;
+    }
+
+    // request API
+    function requestAPI(text) {
+        var data = {"name": "morpheus", "job": "leader"}
+        var url = new URL("https://reqres.in/api/users")
+
+        fetch(url, {
+            mode: "cors",
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': ''
+            }
+        })
+        .then(response => response.json())
+        .then(responseContent => {
+            // change displayed values on screen
+            console.log(responseContent);
+            changePercent(responseContent)
+        });
+    }
+
+    // read content of textarea on click
+    function readInput() {
+        const input = document.getElementById("input");
+        console.log(input.value);
+        
+        requestAPI(input.value)
+    }
+</script>
+
+<html>
+    <div id="bgDiv">
+        <textarea id="input" placeholder="Type something.. (🇬🇧English only)" rows="4" cols="35"></textarea>
+        <!-- TODO add submit button -->
+        <div id="buttonDiv">
+            <button type="button" onclick="readInput()">
+                Submit!
+            </button>
+            <p id="stancePara">predicted as:</p>
+            <p id="sourcePara">sources:</p>
+        </div>
+    </div>
+</html>
